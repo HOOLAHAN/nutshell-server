@@ -1,5 +1,6 @@
 const axios = require('axios');
-const cheerio = require('cheerio');
+const { Readability } = require('@mozilla/readability');
+const { JSDOM } = require('jsdom');
 
 exports.handler = async (event) => {
   try {
@@ -10,18 +11,31 @@ exports.handler = async (event) => {
 
     const response = await axios.get(body.url);
     const html = response.data;
-    const $ = cheerio.load(html);
-    const articleContent = $('article').text();
+    const doc = new JSDOM(html, { url: body.url });
+    const reader = new Readability(doc.window.document);
+    const article = reader.parse();
+
+    if (!article) {
+      throw new Error("Failed to parse the article.");
+    }
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ content: articleContent.trim() })
+      body: JSON.stringify({
+        title: article.title,
+        content: article.textContent,
+        length: article.length
+      })
     };
   } catch (error) {
-    console.error('Error fetching article:', error);
+    console.error('Error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Failed to fetch article', error: error.message })
+      body: JSON.stringify({
+        message: 'Internal Server Error',
+        error: error.message,
+        stack: error.stack
+      })
     };
   }
 };
