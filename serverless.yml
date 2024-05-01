@@ -10,9 +10,15 @@ provider:
     cors: true
 
 functions:
-  function:
+  testFunction:
     handler: index.hello
     events:
       - httpApi:
           path: /test
           method: get
+  articleFetcher:
+    handler: src/functions/articleFetcher.handler
+    events:
+      - httpApi:
+          path: /fetch-article
+          method: post
