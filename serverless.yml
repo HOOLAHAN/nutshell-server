@@ -1,0 +1,18 @@
+service: nutshell-server
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: prod
+  region: eu-west-2
+  httpApi:
+    cors: true
+
+functions:
+  function:
+    handler: index.hello
+    events:
+      - httpApi:
+          path: /test
+          method: get
