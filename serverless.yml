@@ -30,3 +30,9 @@ functions:
       - httpApi:
           path: /summarise
           method: post
+  mainHandler:
+    handler: src/mainHandler.handler
+    events:
+      - httpApi:
+          path: /handleRequest
+          method: post
