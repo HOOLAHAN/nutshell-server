@@ -6,6 +6,8 @@ provider:
   runtime: nodejs18.x
   stage: prod
   region: eu-west-2
+  environment:
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
   httpApi:
     cors: true
 
@@ -17,8 +19,14 @@ functions:
           path: /test
           method: get
   articleFetcher:
-    handler: src/functions/articleFetcher.handler
+    handler: src/articleFetcher.handler
     events:
       - httpApi:
           path: /fetch-article
+          method: post
+  summaryGenerator:
+    handler: src/summaryGenerator.handler
+    events:
+      - httpApi:
+          path: /summarise
           method: post
