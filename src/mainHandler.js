@@ -9,21 +9,31 @@ exports.handler = async (event) => {
 
     if (url) {
       // Call the article fetcher endpoint
+      console.log('Fetching article from:', url);
       const articleResponse = await axios.post(articleFetcherEndpoint, { url });
+      console.log('Article fetched:', articleResponse.data);
       
       // Extract content from the response
       const articleData = articleResponse.data;
       const articleContent = articleData.content;
 
+      console.log('Content extracted:', articleContent);
+
       // Call the summary generator endpoint with the extracted content
+      console.log('Calling summary generator endpoint...');
       const summaryResponse = await axios.post(summaryGeneratorEndpoint, { content: articleContent, bulletPoints });
       
+      console.log('Summary generated:', summaryResponse.data);
+
       // Return the summary from the summary generator endpoint
       return { statusCode: 200, body: JSON.stringify(summaryResponse.data) };
     } else if (content) {
       // Call the summary generator endpoint
+      console.log('Calling summary generator endpoint...');
       const summaryResponse = await axios.post(summaryGeneratorEndpoint, { content, bulletPoints });
       
+      console.log('Summary generated:', summaryResponse.data);
+
       // Return the summary from the summary generator endpoint
       return { statusCode: 200, body: JSON.stringify(summaryResponse.data) };
     } else {
