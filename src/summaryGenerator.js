@@ -1,4 +1,4 @@
-// src/functions/summaryGenerator.js
+// src/summaryGenerator.js
 
 const { OpenAI } = require('openai');
 

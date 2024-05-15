@@ -1,3 +1,5 @@
+// src/mainHandler.js
+
 const axios = require('axios');
 
 const articleFetcherEndpoint = 'https://xqif696pd5.execute-api.eu-west-2.amazonaws.com/fetch-article';
