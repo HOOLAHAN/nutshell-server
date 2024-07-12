@@ -8,6 +8,8 @@ provider:
   region: eu-west-2
   environment:
     OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+    MONGO_URI: ${env:MONGO_URI}
+    SECRET: ${env:SECRET}
   httpApi:
     cors: true
 
@@ -36,3 +38,13 @@ functions:
       - httpApi:
           path: /handleRequest
           method: post
+  app:
+    handler: handler.handler
+    timeout: 30
+    events:
+      - http:
+          path: /
+          method: any
+      - http:
+          path: /{proxy+}
+          method: any
