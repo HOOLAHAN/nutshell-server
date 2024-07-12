@@ -5,6 +5,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const userRoutes = require('./routes/user');
+const nutshellRoutes = require('./routes/nutshell');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(cors());
 
 // Routes
 app.use('/api/user', userRoutes);
+app.use('/api/nutshell', nutshellRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to DB'))

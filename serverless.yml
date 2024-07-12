@@ -14,30 +14,6 @@ provider:
     cors: true
 
 functions:
-  testFunction:
-    handler: index.hello
-    events:
-      - httpApi:
-          path: /test
-          method: get
-  articleFetcher:
-    handler: src/articleFetcher.handler
-    events:
-      - httpApi:
-          path: /fetch-article
-          method: post
-  summaryGenerator:
-    handler: src/summaryGenerator.handler
-    events:
-      - httpApi:
-          path: /summarise
-          method: post
-  mainHandler:
-    handler: src/mainHandler.handler
-    events:
-      - httpApi:
-          path: /handleRequest
-          method: post
   app:
     handler: handler.handler
     timeout: 30
