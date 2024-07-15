@@ -4,11 +4,11 @@ const Transaction = require('../models/transactionModel');
 
 // Create a new transaction
 const createTransaction = async (req, res) => {
-  const { symbol, purchasePrice, numberOfShares } = req.body;
+  const { symbol, purchasePrice, numberOfShares, purchaseDate } = req.body;
   const userId = req.user._id;
 
   try {
-    const transaction = await Transaction.create({ user: userId, symbol, purchasePrice, numberOfShares });
+    const transaction = await Transaction.create({ user: userId, symbol, purchasePrice, numberOfShares, purchaseDate });
     res.status(201).json(transaction);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -30,13 +30,13 @@ const getTransactions = async (req, res) => {
 // Update a transaction
 const updateTransaction = async (req, res) => {
   const { id } = req.params;
-  const { symbol, purchasePrice, numberOfShares } = req.body;
+  const { symbol, purchasePrice, numberOfShares, purchaseDate } = req.body;
   const userId = req.user._id;
 
   try {
     const transaction = await Transaction.findOneAndUpdate(
       { _id: id, user: userId },
-      { symbol, purchasePrice, numberOfShares },
+      { symbol, purchasePrice, numberOfShares, purchaseDate },
       { new: true, runValidators: true }
     );
 

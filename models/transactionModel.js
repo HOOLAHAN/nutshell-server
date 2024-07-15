@@ -21,6 +21,10 @@ const transactionSchema = new Schema({
     type: Number,
     required: true
   },
+  purchaseDate: {
+    type: Date,
+    required: true
+  },
   date: {
     type: Date,
     default: Date.now,
