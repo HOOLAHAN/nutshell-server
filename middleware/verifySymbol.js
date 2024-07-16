@@ -9,7 +9,7 @@ const verifyStockSymbol = async (req, res, next) => {
     return res.status(400).json({ error: 'Stock symbol is required' });
   }
 
-  const API_KEY = process.env.ALPHAVANTAGE_API_KEY;
+  const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 
   try {
     const response = await axios.get('https://www.alphavantage.co/query', {
@@ -20,7 +20,13 @@ const verifyStockSymbol = async (req, res, next) => {
       }
     });
 
+    console.log('Alpha Vantage response:', response.data);
+
     const matches = response.data.bestMatches;
+    if (!matches || matches.length === 0) {
+      return res.status(400).json({ error: 'Invalid stock symbol' });
+    }
+
     const isValidSymbol = matches.some(match => match['1. symbol'].toUpperCase() === symbol.toUpperCase());
 
     if (!isValidSymbol) {

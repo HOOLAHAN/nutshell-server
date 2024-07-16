@@ -10,6 +10,7 @@ provider:
     OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     MONGO_URI: ${env:MONGO_URI}
     SECRET: ${env:SECRET}
+    ALPHA_VANTAGE_API_KEY: ${env:ALPHA_VANTAGE_API_KEY}
   httpApi:
     cors: true
 
