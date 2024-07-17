@@ -1,6 +1,7 @@
 // routes/user.js
 
 const express = require('express');
+const { check } = require('express-validator');
 
 // controller functions
 const { signupUser, loginUser } = require('../controllers/userController');
@@ -10,10 +11,16 @@ const isAdmin = require('../middleware/isAdmin');
 const router = express.Router();
 
 // login route
-router.post('/login', loginUser);
+router.post('/login', [
+  check('email').isEmail(),
+  check('password').isLength({ min: 6 })
+], loginUser);
 
 // signup route
-router.post('/signup', signupUser);
+router.post('/signup', [
+  check('email').isEmail(),
+  check('password').isLength({ min: 6 })
+], signupUser);
 
 // admin-only route
 router.get('/admin', requireAuth, isAdmin, (req, res) => {
