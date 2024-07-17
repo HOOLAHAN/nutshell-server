@@ -13,7 +13,12 @@ const transactionSchema = new Schema({
     type: String,
     required: true
   },
-  purchasePrice: {
+  type: {
+    type: String,
+    enum: ['buy', 'sell'],
+    required: true
+  },
+  transactionPrice: {
     type: Number,
     required: true
   },
@@ -21,7 +26,7 @@ const transactionSchema = new Schema({
     type: Number,
     required: true
   },
-  purchaseDate: {
+  transactionDate: {
     type: Date,
     required: true
   },
