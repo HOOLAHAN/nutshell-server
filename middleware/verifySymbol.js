@@ -35,8 +35,8 @@ const verifyStockSymbol = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Error verifying stock symbol:', error);
-    res.status(500).json({ error: 'Unable to verify stock symbol' });
+    console.error('Error verifying stock symbol:', error.message);
+    res.status(500).json({ error: 'Unable to verify stock symbol. Please try again later.' });
   }
 };
 

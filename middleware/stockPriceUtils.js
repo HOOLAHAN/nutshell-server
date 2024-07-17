@@ -1,11 +1,18 @@
 // middleware/stockPriceUtils.js
 
 const axios = require('axios');
+const NodeCache = require('node-cache');
 
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 const ALPHA_VANTAGE_URL = 'https://www.alphavantage.co/query';
+const cache = new NodeCache({ stdTTL: 3600 }); // Cache data for 1 hour
 
 async function fetchStockData(symbol, date) {
+  const cacheKey = `${symbol}-${date}`;
+  if (cache.has(cacheKey)) {
+    return cache.get(cacheKey);
+  }
+
   try {
     const response = await axios.get(ALPHA_VANTAGE_URL, {
       params: {
@@ -21,12 +28,15 @@ async function fetchStockData(symbol, date) {
       throw new Error(`No data available for ${symbol} on ${date}`);
     }
 
-    return {
+    const stockData = {
       high: parseFloat(data[date]['2. high']),
       low: parseFloat(data[date]['3. low']),
     };
+    
+    cache.set(cacheKey, stockData);
+    return stockData;
   } catch (error) {
-    console.error('Error fetching stock data:', error);
+    console.error('Error fetching stock data:', error.message);
     throw error;
   }
 }
