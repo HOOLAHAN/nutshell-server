@@ -43,4 +43,27 @@ async function checkPriceRange(symbol, date, price) {
   }
 }
 
-module.exports = { checkPriceRange };
+async function fetchHistoricalPrices(symbol) {
+  try {
+    const response = await axios.get(ALPHA_VANTAGE_URL, {
+      params: {
+        function: 'TIME_SERIES_DAILY_ADJUSTED',
+        symbol: symbol,
+        outputsize: 'full',
+        apikey: ALPHA_VANTAGE_API_KEY
+      }
+    });
+
+    const data = response.data['Time Series (Daily)'];
+    if (!data) {
+      throw new Error(`No data available for ${symbol}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`Error fetching historical prices for ${symbol}:`, error);
+    throw error;
+  }
+}
+
+module.exports = { fetchStockData, checkPriceRange, fetchHistoricalPrices };
