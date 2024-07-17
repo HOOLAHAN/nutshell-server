@@ -1,8 +1,5 @@
-// routes/transaction.js
-
 const express = require('express');
 const { createTransaction, getTransactions, updateTransaction, deleteTransaction } = require('../controllers/transactionController');
-const { calculatePortfolioValue } = require('../controllers/portfolioController');
 const requireAuth = require('../middleware/requireAuth');
 const verifyStockSymbol = require('../middleware/verifySymbol');
 
@@ -22,8 +19,5 @@ router.put('/:id', verifyStockSymbol, updateTransaction);
 
 // Delete a transaction
 router.delete('/:id', deleteTransaction);
-
-// Get portfolio performance
-router.get('/portfolio/performance', calculatePortfolioValue);
 
 module.exports = router;
