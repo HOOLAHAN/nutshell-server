@@ -11,6 +11,7 @@ const userRoutes = require('./routes/user');
 const nutshellRoutes = require('./routes/nutshell');
 const alphaVantageRoutes = require('./routes/alphaVantage');
 const transactionRoutes = require('./routes/transaction');
+const portfolioRoutes = require('./routes/portfolio')
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/nutshell', nutshellRoutes);
 app.use('/api/alpha-vantage', alphaVantageRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/portfolio', portfolioRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

@@ -2,11 +2,13 @@
 
 const Transaction = require('../models/transactionModel');
 const { checkPriceRange } = require('../middleware/stockPriceUtils');
+const { updatePortfolioHistory } = require('./portfolioController');
 
 const createTransaction = async (req, res) => {
   const { symbol, type, transactionPrice, numberOfShares, transactionDate } = req.body;
   const userId = req.user._id;
 
+  // Validate required fields
   if (!symbol || !type || !transactionPrice || !numberOfShares || !transactionDate) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -18,6 +20,10 @@ const createTransaction = async (req, res) => {
     }
 
     const transaction = await Transaction.create({ user: userId, symbol, type, transactionPrice, numberOfShares, transactionDate });
+
+    // Update portfolio and historical data
+    await updatePortfolioHistory(userId, symbol, type, numberOfShares, transactionPrice, transactionDate);
+
     res.status(201).json(transaction);
   } catch (error) {
     console.error('Error creating transaction:', error.stack);
@@ -42,6 +48,7 @@ const updateTransaction = async (req, res) => {
   const { symbol, type, transactionPrice, numberOfShares, transactionDate } = req.body;
   const userId = req.user._id;
 
+  // Validate required fields
   if (!symbol || !type || !transactionPrice || !numberOfShares || !transactionDate) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -62,6 +69,9 @@ const updateTransaction = async (req, res) => {
       return res.status(404).json({ error: 'Transaction not found or user not authorized' });
     }
 
+    // Update portfolio and historical data
+    await updatePortfolioHistory(userId, symbol, type, numberOfShares, transactionPrice, transactionDate);
+
     res.status(200).json(transaction);
   } catch (error) {
     console.error('Error updating transaction:', error.message);
@@ -79,6 +89,9 @@ const deleteTransaction = async (req, res) => {
     if (!transaction) {
       return res.status(404).json({ error: 'Transaction not found or user not authorized' });
     }
+
+    // Note: TODO -  need a method to update portfolio history on transaction deletion as well.
+    // await updatePortfolioHistoryOnDelete(userId, transaction);
 
     res.status(200).json({ message: 'Transaction deleted successfully' });
   } catch (error) {
