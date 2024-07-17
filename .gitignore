@@ -8,3 +8,4 @@ jspm_packages
 # misc
 .env
 .DS_Store
+TOOLBELT.code-workspace
