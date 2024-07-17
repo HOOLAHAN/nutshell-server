@@ -3,22 +3,21 @@
 const Transaction = require('../models/transactionModel');
 const { checkPriceRange } = require('../middleware/stockPriceUtils');
 
-// Create a new transaction
 const createTransaction = async (req, res) => {
   const { symbol, type, transactionPrice, numberOfShares, transactionDate } = req.body;
   const userId = req.user._id;
 
-  console.log('Received transaction creation request:', { symbol, type, transactionPrice, numberOfShares, transactionDate, userId });
+  if (!symbol || !type || !transactionPrice || !numberOfShares || !transactionDate) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
 
   try {
     const priceCheckMessage = await checkPriceRange(symbol, transactionDate, transactionPrice);
     if (priceCheckMessage.includes('outside the range')) {
-      console.log('Price check failed:', priceCheckMessage);
       return res.status(400).json({ error: priceCheckMessage });
     }
 
     const transaction = await Transaction.create({ user: userId, symbol, type, transactionPrice, numberOfShares, transactionDate });
-    console.log('Transaction created successfully:', transaction);
     res.status(201).json(transaction);
   } catch (error) {
     console.error('Error creating transaction:', error.stack);
@@ -26,7 +25,6 @@ const createTransaction = async (req, res) => {
   }
 };
 
-// Get all transactions for the authenticated user
 const getTransactions = async (req, res) => {
   const userId = req.user._id;
 
@@ -34,15 +32,19 @@ const getTransactions = async (req, res) => {
     const transactions = await Transaction.find({ user: userId });
     res.status(200).json(transactions);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error fetching transactions:', error.message);
+    res.status(500).json({ error: error.message });
   }
 };
 
-// Update a transaction
 const updateTransaction = async (req, res) => {
   const { id } = req.params;
   const { symbol, type, transactionPrice, numberOfShares, transactionDate } = req.body;
   const userId = req.user._id;
+
+  if (!symbol || !type || !transactionPrice || !numberOfShares || !transactionDate) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
 
   try {
     const priceCheckMessage = await checkPriceRange(symbol, transactionDate, transactionPrice);
@@ -62,11 +64,11 @@ const updateTransaction = async (req, res) => {
 
     res.status(200).json(transaction);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error updating transaction:', error.message);
+    res.status(500).json({ error: error.message });
   }
 };
 
-// Delete a transaction
 const deleteTransaction = async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
@@ -80,7 +82,8 @@ const deleteTransaction = async (req, res) => {
 
     res.status(200).json({ message: 'Transaction deleted successfully' });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error deleting transaction:', error.message);
+    res.status(500).json({ error: error.message });
   }
 };
 
