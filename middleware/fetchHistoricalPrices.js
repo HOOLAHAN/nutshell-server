@@ -29,6 +29,7 @@ async function fetchHistoricalPrices(symbol, startDate, endDate) {
       }
     }
 
+    console.log(`Fetched historical prices for ${symbol} from ${startDate} to ${endDate}`, prices);
     return prices;
   } catch (error) {
     console.error('Error fetching historical prices:', error);

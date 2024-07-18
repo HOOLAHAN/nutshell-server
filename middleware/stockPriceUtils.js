@@ -34,6 +34,7 @@ async function fetchStockData(symbol, date) {
     };
     
     cache.set(cacheKey, stockData);
+    console.log(`Fetched stock data for ${symbol} on ${date}:`, stockData);
     return stockData;
   } catch (error) {
     console.error('Error fetching stock data:', error.message);

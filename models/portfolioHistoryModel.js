@@ -1,26 +1,41 @@
 // models/portfolioHistoryModel.js
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const portfolioHistorySchema = new Schema({
+const portfolioHistorySchema = new mongoose.Schema({
   user: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
   },
   date: {
     type: Date,
-    required: true
+    required: true,
   },
   totalValue: {
     type: Number,
-    required: true
+    required: true,
   },
-  holdings: [{
-    symbol: String,
-    quantity: Number,
-    averagePrice: Number
-  }]
+  holdings: [
+    {
+      symbol: {
+        type: String,
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+      },
+      averagePrice: {
+        type: Number,
+        required: true,
+      },
+    },
+  ],
 }, { timestamps: true });
+
+portfolioHistorySchema.pre('save', function(next) {
+  console.log(`Saving PortfolioHistory for date ${this.date}:`, this);
+  next();
+});
 
 module.exports = mongoose.model('PortfolioHistory', portfolioHistorySchema);
