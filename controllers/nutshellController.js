@@ -11,7 +11,26 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Fetch article
+// Function to fetch article content
+const fetchArticleContent = async (url) => {
+  const response = await axios.get(url);
+  const html = response.data;
+  const doc = new JSDOM(html, { url });
+  const reader = new Readability(doc.window.document);
+  const article = reader.parse();
+
+  if (!article) {
+    throw new Error("Failed to parse the article.");
+  }
+
+  return {
+    title: article.title,
+    content: article.textContent,
+    length: article.length,
+  };
+};
+
+// Fetch article endpoint
 const fetchArticle = async (req, res) => {
   try {
     const { url } = req.body;
@@ -19,23 +38,11 @@ const fetchArticle = async (req, res) => {
       return res.status(400).json({ message: 'No URL provided' });
     }
 
-    const response = await axios.get(url);
-    const html = response.data;
-    const doc = new JSDOM(html, { url });
-    const reader = new Readability(doc.window.document);
-    const article = reader.parse();
+    const article = await fetchArticleContent(url);
 
-    if (!article) {
-      throw new Error("Failed to parse the article.");
-    }
-
-    res.json({
-      title: article.title,
-      content: article.textContent,
-      length: article.length,
-    });
+    res.json(article);
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error fetching article:', error.message, error.stack);
     res.status(500).json({
       message: 'Internal Server Error',
       error: error.message,
@@ -44,7 +51,22 @@ const fetchArticle = async (req, res) => {
   }
 };
 
-// Generate summary
+// Function to generate summary
+const generateSummaryContent = async (content, bulletPoints) => {
+  const response = await openai.chat.completions.create({
+    messages: [
+      { role: 'system', content: `You are a helpful assistant tasked with summarizing content into ${bulletPoints} bullet points.` },
+      { role: 'user', content: content },
+    ],
+    model: 'gpt-3.5-turbo',
+  }).asResponse();
+
+  const summary = await response.json();
+
+  return summary;
+};
+
+// Generate summary endpoint
 const generateSummary = async (req, res) => {
   try {
     const { content, bulletPoints } = req.body;
@@ -53,21 +75,11 @@ const generateSummary = async (req, res) => {
       return res.status(400).json({ message: 'Required data missing (content, bulletPoints)' });
     }
 
-    const response = await openai.chat.completions
-      .create({
-        messages: [
-          { role: 'system', content: `You are a helpful assistant tasked with summarizing content into ${bulletPoints} bullet points.` },
-          { role: 'user', content: content },
-        ],
-        model: 'gpt-3.5-turbo',
-      })
-      .asResponse();
-
-    const summary = await response.json();
+    const summary = await generateSummaryContent(content, bulletPoints);
 
     res.json({ summary });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error generating summary:', error.message, error.stack);
     res.status(500).json({
       message: 'Internal Server Error',
       error: error.message,
@@ -85,24 +97,21 @@ const handleRequest = async (req, res) => {
       return res.status(400).json({ message: 'Invalid or missing bulletPoints' });
     }
 
+    let articleContent;
     if (url) {
-      const articleResponse = await axios.post('/nutshell/fetch-article', { url });
-      if (!articleResponse.data.content) {
-        return res.status(500).json({ message: 'Failed to fetch content from article' });
-      }
-
-      const articleContent = articleResponse.data.content;
-      const summaryResponse = await axios.post('/nutshell/summarise', { content: articleContent, bulletPoints });
-
-      res.json(summaryResponse.data);
+      const article = await fetchArticleContent(url);
+      articleContent = article.content;
     } else if (content) {
-      const summaryResponse = await axios.post('/nutshell/summarise', { content, bulletPoints });
-      res.json(summaryResponse.data);
+      articleContent = content;
     } else {
-      res.status(400).json({ message: 'Required data missing (url or content)' });
+      return res.status(400).json({ message: 'Required data missing (url or content)' });
     }
+
+    const summary = await generateSummaryContent(articleContent, bulletPoints);
+
+    res.json({ summary });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error handling request:', error.message, error.stack);
     res.status(500).json({
       message: 'Internal Server Error',
       error: error.message,
