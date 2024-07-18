@@ -1,55 +1,53 @@
+const Portfolio = require('../models/portfolioModel');
 const PortfolioHistory = require('../models/portfolioHistoryModel');
 const { fetchHistoricalPrices } = require('../middleware/fetchHistoricalPrices');
 
 const calculateTotalValue = (holdings, prices) => {
   let totalValue = 0;
   holdings.forEach(holding => {
-    const price = prices[holding.symbol]?.close || 0;
+    const price = prices.close;
     totalValue += holding.quantity * price;
   });
   return totalValue;
 };
 
 const updatePortfolioHistory = async (userId, symbol, type, quantity, transactionPrice, transactionDate) => {
-  try {
-    const endDate = new Date().toISOString().split('T')[0];
-    const historicalPrices = await fetchHistoricalPrices(symbol, transactionDate, endDate);
-    let currentHoldings = [];
+  const endDate = new Date().toISOString().split('T')[0];
+  const historicalPrices = await fetchHistoricalPrices(symbol, transactionDate, endDate);
 
-    for (const date in historicalPrices[symbol]) {
-      let portfolioHistory = await PortfolioHistory.findOne({ user: userId, date });
+  let currentHoldings = [];
 
-      if (!portfolioHistory) {
-        portfolioHistory = new PortfolioHistory({ user: userId, date, holdings: [], totalValue: 0 });
-      }
+  for (const date in historicalPrices) {
+    let portfolioHistory = await PortfolioHistory.findOne({ user: userId, date });
 
-      currentHoldings = portfolioHistory.holdings;
-
-      // Update holdings
-      const holding = currentHoldings.find(h => h.symbol === symbol);
-      if (holding) {
-        if (type === 'buy') {
-          const totalCost = (holding.averagePrice * holding.quantity) + (transactionPrice * quantity);
-          holding.quantity += quantity;
-          holding.averagePrice = totalCost / holding.quantity;
-        } else if (type === 'sell') {
-          holding.quantity -= quantity;
-          if (holding.quantity === 0) {
-            currentHoldings = currentHoldings.filter(h => h.symbol !== symbol);
-          }
-        }
-      } else if (type === 'buy') {
-        currentHoldings.push({ symbol, quantity, averagePrice: transactionPrice });
-      }
-
-      portfolioHistory.holdings = currentHoldings;
-      portfolioHistory.totalValue = calculateTotalValue(currentHoldings, historicalPrices[date]);
-      await portfolioHistory.save();
-
-      console.log(`Updated portfolio for ${date}:`, portfolioHistory);
+    if (!portfolioHistory) {
+      portfolioHistory = new PortfolioHistory({ user: userId, date, holdings: [], totalValue: 0 });
     }
-  } catch (error) {
-    console.error('Error updating portfolio history:', error.message, error.stack);
+
+    currentHoldings = portfolioHistory.holdings;
+
+    // Update holdings
+    const holding = currentHoldings.find(h => h.symbol === symbol);
+    if (holding) {
+      if (type === 'buy') {
+        holding.quantity += quantity;
+        holding.averagePrice = ((holding.averagePrice * holding.quantity) + (transactionPrice * quantity)) / (holding.quantity + quantity);
+      } else {
+        holding.quantity -= quantity;
+        if (holding.quantity === 0) {
+          currentHoldings = currentHoldings.filter(h => h.symbol !== symbol);
+        }
+      }
+    } else if (type === 'buy') {
+      currentHoldings.push({ symbol, quantity, averagePrice: transactionPrice });
+    }
+
+    portfolioHistory.holdings = currentHoldings;
+    portfolioHistory.totalValue = calculateTotalValue(currentHoldings, historicalPrices[date]);
+
+    console.log(`Date: ${date}, Holdings: ${JSON.stringify(currentHoldings)}, Total Value: ${portfolioHistory.totalValue}`);
+
+    await portfolioHistory.save();
   }
 };
 
