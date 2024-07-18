@@ -1,3 +1,5 @@
+// controllers/portfolioController.js
+
 const Portfolio = require('../models/portfolioModel');
 const PortfolioHistory = require('../models/portfolioHistoryModel');
 const { fetchHistoricalPrices } = require('../middleware/fetchHistoricalPrices');
@@ -44,10 +46,49 @@ const updatePortfolioHistory = async (userId, symbol, type, quantity, transactio
 
     portfolioHistory.holdings = currentHoldings;
     portfolioHistory.totalValue = calculateTotalValue(currentHoldings, historicalPrices[date]);
-
-    console.log(`Date: ${date}, Holdings: ${JSON.stringify(currentHoldings)}, Total Value: ${portfolioHistory.totalValue}`);
-
     await portfolioHistory.save();
+  }
+};
+
+const updatePortfolioHistoryOnDelete = async (userId, transaction) => {
+  const { symbol, type, numberOfShares, transactionPrice, transactionDate } = transaction;
+  const endDate = new Date().toISOString().split('T')[0];
+  const historicalPrices = await fetchHistoricalPrices(symbol, transactionDate, endDate);
+
+  let currentHoldings = [];
+
+  for (const date in historicalPrices) {
+    let portfolioHistory = await PortfolioHistory.findOne({ user: userId, date });
+
+    if (!portfolioHistory) {
+      portfolioHistory = new PortfolioHistory({ user: userId, date, holdings: [], totalValue: 0 });
+    }
+
+    currentHoldings = portfolioHistory.holdings;
+
+    // Update holdings
+    const holding = currentHoldings.find(h => h.symbol === symbol);
+    if (holding) {
+      if (type === 'buy') {
+        holding.quantity -= numberOfShares;
+        if (holding.quantity === 0) {
+          currentHoldings = currentHoldings.filter(h => h.symbol !== symbol);
+        } else {
+          holding.averagePrice = (holding.averagePrice * holding.quantity - transactionPrice * numberOfShares) / (holding.quantity - numberOfShares);
+        }
+      } else {
+        holding.quantity += numberOfShares;
+        holding.averagePrice = ((holding.averagePrice * holding.quantity) + (transactionPrice * numberOfShares)) / (holding.quantity + numberOfShares);
+      }
+    }
+
+    if (currentHoldings.length === 0) {
+      await PortfolioHistory.deleteOne({ user: userId, date });
+    } else {
+      portfolioHistory.holdings = currentHoldings;
+      portfolioHistory.totalValue = calculateTotalValue(currentHoldings, historicalPrices[date]);
+      await portfolioHistory.save();
+    }
   }
 };
 
@@ -68,4 +109,4 @@ const getPortfolioHistory = async (req, res) => {
   }
 };
 
-module.exports = { updatePortfolioHistory, getPortfolioHistory };
+module.exports = { updatePortfolioHistory, updatePortfolioHistoryOnDelete, getPortfolioHistory };

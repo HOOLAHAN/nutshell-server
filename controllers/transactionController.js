@@ -2,7 +2,7 @@
 
 const Transaction = require('../models/transactionModel');
 const { checkPriceRange } = require('../middleware/stockPriceUtils');
-const { updatePortfolioHistory } = require('./portfolioController');
+const { updatePortfolioHistory, updatePortfolioHistoryOnDelete } = require('./portfolioController');
 
 const createTransaction = async (req, res) => {
   const { symbol, type, transactionPrice, numberOfShares, transactionDate } = req.body;
@@ -90,8 +90,8 @@ const deleteTransaction = async (req, res) => {
       return res.status(404).json({ error: 'Transaction not found or user not authorized' });
     }
 
-    // Note: TODO -  need a method to update portfolio history on transaction deletion as well.
-    // await updatePortfolioHistoryOnDelete(userId, transaction);
+    // Update portfolio and historical data on transaction deletion
+    await updatePortfolioHistoryOnDelete(userId, transaction);
 
     res.status(200).json({ message: 'Transaction deleted successfully' });
   } catch (error) {
