@@ -12,6 +12,8 @@ const nutshellRoutes = require('./routes/nutshell');
 const alphaVantageRoutes = require('./routes/alphaVantage');
 const transactionRoutes = require('./routes/transaction');
 const portfolioRoutes = require('./routes/portfolio')
+const pdfRoutes = require('./routes/pdfToText');
+const fileUpload = require('express-fileupload');
 
 const app = express();
 
@@ -20,6 +22,7 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan('combined'));
+app.use(fileUpload());
 
 // Routes
 app.use('/api/user', userRoutes);
@@ -27,6 +30,7 @@ app.use('/api/nutshell', nutshellRoutes);
 app.use('/api/alpha-vantage', alphaVantageRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/pdf', pdfRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
